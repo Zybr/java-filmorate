@@ -2,12 +2,11 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
 
-
 @Data
-public class Film {
+public class User {
     private Long id;
+    private String email;
+    private String login;
     private String name;
-    private String description;
-    private String releaseDate;
-    private Integer duration;
+    private String birthday;
 }
