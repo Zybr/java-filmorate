@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.slf4j.Logger;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -24,7 +25,7 @@ public abstract class AbstractModelsController<T extends AbstractModel> {
     }
 
     @PostMapping
-    public T create(@RequestBody T creation) {
+    public T create(@RequestBody @Validated T creation) {
         validate(creation);
         fill(creation);
         save(creation);
@@ -33,7 +34,7 @@ public abstract class AbstractModelsController<T extends AbstractModel> {
     }
 
     @PutMapping
-    public T update(@RequestBody T updating) {
+    public T update(@RequestBody @Validated T updating) {
         checkExistence(updating);
         validate(updating);
         fill(updating);
@@ -72,7 +73,9 @@ public abstract class AbstractModelsController<T extends AbstractModel> {
         this.models.put(model.getId(), model);
     }
 
-    protected abstract void validate(T model) throws RuntimeException;
+    protected void validate(T model) throws RuntimeException {
+        // Override for adding extra validation
+    }
 
     protected abstract Logger getLogger();
 }

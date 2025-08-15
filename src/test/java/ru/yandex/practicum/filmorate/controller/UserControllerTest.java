@@ -5,7 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.text.ParseException;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 
 @WebMvcTest(UserController.class)
@@ -15,14 +18,16 @@ public class UserControllerTest extends AbstractModelControllerTest<User> {
         return "/users";
     }
 
-    protected User jsonToModel(String json) throws JsonProcessingException {
+    protected User jsonToModel(String json) throws JsonProcessingException, ParseException {
         LinkedHashMap<String, Object> attributes = new ObjectMapper().readValue(json, LinkedHashMap.class);
         return User.builder()
                 .id(Long.valueOf(attributes.get("id").toString()))
                 .email(attributes.get("email").toString())
                 .login(attributes.get("login").toString())
                 .name(attributes.get("name").toString())
-                .birthday(attributes.get("birthday").toString())
+                .birthday(parseDate(
+                        attributes.get("birthday").toString()
+                ))
                 .build();
     }
 
@@ -31,11 +36,11 @@ public class UserControllerTest extends AbstractModelControllerTest<User> {
                 .email(faker.internet().emailAddress())
                 .login(faker.lorem().word())
                 .name(faker.company().name())
-                .birthday(makeDateString())
+                .birthday(Date.from(Instant.now()))
                 .build();
     }
 
-    protected ArrayList<User> makeInvalidModels() {
+    protected ArrayList<User> makeInvalidModels() throws ParseException {
         ArrayList<User> models = new ArrayList<>();
         models.add(
                 makeModel().toBuilder()
@@ -69,17 +74,7 @@ public class UserControllerTest extends AbstractModelControllerTest<User> {
         );
         models.add(
                 makeModel().toBuilder()
-                        .birthday("")
-                        .build()
-        );
-        models.add(
-                makeModel().toBuilder()
-                        .birthday("invalid-date-format")
-                        .build()
-        );
-        models.add(
-                makeModel().toBuilder()
-                        .birthday("2030-01-01")
+                        .birthday(parseDate("2030-01-01"))
                         .build()
         );
         models.add(

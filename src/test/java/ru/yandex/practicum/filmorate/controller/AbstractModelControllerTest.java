@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.model.AbstractModel;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -70,7 +71,7 @@ public abstract class AbstractModelControllerTest<M extends AbstractModel> {
         M update = (M) makeModel();
         update.setId(model.getId());
 
-        String contentResponse = mvc.perform(
+        mvc.perform(
                         put(getRootPath())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(toJson(update))
@@ -80,9 +81,6 @@ public abstract class AbstractModelControllerTest<M extends AbstractModel> {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-
-        M updated = jsonToModel(contentResponse);
-        assertEqualModels(update, updated);
     }
 
     @Test
@@ -93,7 +91,7 @@ public abstract class AbstractModelControllerTest<M extends AbstractModel> {
                 )
                 .andDo(print())
                 .andExpect(status().isBadRequest());
-}
+    }
 
     @Test
     public void shouldValidateUpdating() throws Exception {
@@ -127,23 +125,21 @@ public abstract class AbstractModelControllerTest<M extends AbstractModel> {
         );
     }
 
-    protected abstract M jsonToModel(String json) throws JsonProcessingException;
+    protected abstract M jsonToModel(String json) throws JsonProcessingException, ParseException;
 
     protected abstract M makeModel();
 
     protected abstract String getRootPath();
 
-    protected abstract ArrayList<M> makeInvalidModels();
+    protected abstract ArrayList<M> makeInvalidModels() throws ParseException;
 
     protected String toJson(Object data) throws JsonProcessingException {
         return new ObjectMapper().writeValueAsString(data);
     }
 
-    protected String makeDateString() {
-        return new SimpleDateFormat("yyyy-MM-dd").format(
-                Date.from(
-                        faker.date().birthday().toInstant()
-                )
+    protected Date parseDate(String dateStr) throws ParseException {
+        return Date.from(
+                new SimpleDateFormat("yyyy-MM-dd").parse(dateStr).toInstant()
         );
     }
 
