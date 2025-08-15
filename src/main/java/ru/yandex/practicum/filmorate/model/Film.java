@@ -1,11 +1,13 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.Builder;
 import lombok.Data;
-
+import lombok.EqualsAndHashCode;
 
 @Data
-public class Film {
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+@Builder(toBuilder = true)
+public class Film extends AbstractModel {
     private String name;
     private String description;
     private String releaseDate;

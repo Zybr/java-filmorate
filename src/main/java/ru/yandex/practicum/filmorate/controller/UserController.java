@@ -1,55 +1,22 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.springframework.web.bind.annotation.*;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.exception.http.BadRequestException;
-import ru.yandex.practicum.filmorate.exception.http.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
-public class UserController {
-    private final Map<Long, User> users = new HashMap<>();
-    private Long lastId = 0L;
-
-    @GetMapping
-    public Collection<User> getAll() {
-        return users.values();
-    }
-
-    @PostMapping
-    public User create(@RequestBody User creation) {
-        validate(creation);
-        fill(creation);
-        save(creation);
-
-        return creation;
-    }
-
-    @PutMapping
-    public User update(@RequestBody User updating) {
-        checkExistence(updating);
-        validate(updating);
-        fill(updating);
-        save(updating);
-
-        return updating;
-    }
-
-    private void checkExistence(User user) throws NotFoundException {
-        if (!users.containsKey(user.getId())) {
-            throw new NotFoundException(String.format("There is no a User with %d ID", user.getId()));
-        }
-    }
-
-    private void validate(User user) throws RuntimeException {
+@Slf4j
+public class UserController extends AbstractModelsController<User> {
+    protected void validate(User user) throws RuntimeException {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String requiredMessage = "\"%s\" is required.";
         String invalidFormatMessage = "\"%s\" has invalid format.";
@@ -100,21 +67,17 @@ public class UserController {
         }
     }
 
-    private void fill(User user) {
-        user.setId(
-                user.getId() != null
-                        ? user.getId()
-                        : ++lastId
-        );
+    protected void fill(User user) {
+        super.fill(user);
         user.setName(
                 (user.getName() == null || user.getName().isEmpty())
                         ? user.getLogin()
                         : user.getName()
         );
-        this.users.put(user.getId(), user);
     }
 
-    private void save(User user) {
-        this.users.put(user.getId(), user);
+    @Override
+    protected Logger getLogger() {
+        return log;
     }
 }
