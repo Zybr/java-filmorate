@@ -26,11 +26,23 @@ public class FilmController extends AbstractModelsController<Film> {
 
         // Name
 
-        if (model.getName().isEmpty()) {
-            throwValidationError(String.format(requiredMessage, "name"));
+        if (
+                model.getName() == null
+                        || model.getName().isEmpty()
+        ) {
+            throwValidationError(String.format(
+                    requiredMessage, "name"
+            ));
         }
 
         // Description
+
+        if (model.getDescription() == null) {
+            throwValidationError(String.format(
+                    requiredMessage,
+                    "description"
+            ));
+        }
 
         if (model.getDescription().length() > maxDescriptionLength) {
             throwValidationError(String.format(
@@ -43,6 +55,13 @@ public class FilmController extends AbstractModelsController<Film> {
         // Release date
 
         Instant minReleaseDate;
+
+        if (model.getReleaseDate() == null) {
+            throwValidationError(String.format(
+                    requiredMessage,
+                    "releaseDate"
+            ));
+        }
 
         try {
             minReleaseDate = dateFormat.parse("1895-12-28").toInstant();
@@ -61,6 +80,13 @@ public class FilmController extends AbstractModelsController<Film> {
         }
 
         // Duration
+
+        if (model.getDuration() == null) {
+            throwValidationError(String.format(
+                    requiredMessage,
+                    "duration"
+            ));
+        }
 
         if (model.getDuration() <= 0) {
             throwValidationError(String.format(

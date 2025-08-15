@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Builder(toBuilder = true)
 public class Film extends AbstractModel {
+    protected Long id;
     private String name;
     private String description;
     private String releaseDate;

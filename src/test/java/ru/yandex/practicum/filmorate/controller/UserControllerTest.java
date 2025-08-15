@@ -3,83 +3,88 @@ package ru.yandex.practicum.filmorate.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
-@WebMvcTest(FilmController.class)
-public class FilmControllerTest extends AbstractModelControllerTest<Film> {
+@WebMvcTest(UserController.class)
+public class UserControllerTest extends AbstractModelControllerTest<User> {
     @Override
     protected String getRootPath() {
-        return "/films";
+        return "/users";
     }
 
-    protected Film jsonToModel(String json) throws JsonProcessingException {
+    protected User jsonToModel(String json) throws JsonProcessingException {
         LinkedHashMap<String, Object> attributes = new ObjectMapper().readValue(json, LinkedHashMap.class);
-        return Film.builder()
+        return User.builder()
                 .id(Long.valueOf(attributes.get("id").toString()))
+                .email(attributes.get("email").toString())
+                .login(attributes.get("login").toString())
                 .name(attributes.get("name").toString())
-                .description(attributes.get("description").toString())
-                .releaseDate(attributes.get("releaseDate").toString())
-                .duration(Integer.parseInt(attributes.get("duration").toString()))
+                .birthday(attributes.get("birthday").toString())
                 .build();
     }
 
-    protected Film makeModel() {
-        return Film.builder()
+    protected User makeModel() {
+        return User.builder()
+                .email(faker.internet().emailAddress())
+                .login(faker.lorem().word())
                 .name(faker.company().name())
-                .description(faker.lorem().sentence())
-                .releaseDate(makeDateString())
-                .duration(faker.random().nextInt(10, 100))
+                .birthday(makeDateString())
                 .build();
     }
 
-    protected ArrayList<Film> makeInvalidModels() {
-        ArrayList<Film> models = new ArrayList<>();
+    protected ArrayList<User> makeInvalidModels() {
+        ArrayList<User> models = new ArrayList<>();
         models.add(
                 makeModel().toBuilder()
-                        .name("")
+                        .email("")
                         .build()
         );
         models.add(
                 makeModel().toBuilder()
-                        .name(null)
+                        .email("invalid-email")
                         .build()
         );
         models.add(
                 makeModel().toBuilder()
-                        .description(faker.lorem().sentences(50).toString())
+                        .email(null)
                         .build()
         );
         models.add(
                 makeModel().toBuilder()
-                        .description(null)
+                        .login("")
                         .build()
         );
         models.add(
                 makeModel().toBuilder()
-                        .duration(null)
+                        .login("with space")
                         .build()
         );
         models.add(
                 makeModel().toBuilder()
-                        .duration(-1)
+                        .login(null)
                         .build()
         );
         models.add(
                 makeModel().toBuilder()
-                        .releaseDate(null)
+                        .birthday("")
                         .build()
         );
         models.add(
                 makeModel().toBuilder()
-                        .releaseDate("invalid-date-format")
+                        .birthday("invalid-date-format")
                         .build()
         );
         models.add(
                 makeModel().toBuilder()
-                        .releaseDate("1895-12-01")
+                        .birthday("2030-01-01")
+                        .build()
+        );
+        models.add(
+                makeModel().toBuilder()
+                        .birthday(null)
                         .build()
         );
 

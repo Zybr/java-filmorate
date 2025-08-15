@@ -24,7 +24,10 @@ public class UserController extends AbstractModelsController<User> {
 
         // Email
 
-        if (user.getEmail().isEmpty()) {
+        if (
+                user.getEmail() == null
+                        || user.getEmail().isEmpty()
+        ) {
             throw new BadRequestException(String.format(
                     requiredMessage,
                     "email"
@@ -40,7 +43,21 @@ public class UserController extends AbstractModelsController<User> {
 
         // Login
 
-        if (user.getLogin().trim().isEmpty()) {
+        if (user.getLogin() == null) {
+            throw new BadRequestException(String.format(
+                    requiredMessage,
+                    "login"
+            ));
+        }
+
+        if (user.getLogin().contains(" ")) {
+            throw new BadRequestException(String.format(
+                    requiredMessage,
+                    "login"
+            ));
+        }
+
+        if (user.getLogin().isEmpty()) {
             throw new BadRequestException(String.format(
                     requiredMessage,
                     "login"
@@ -48,6 +65,13 @@ public class UserController extends AbstractModelsController<User> {
         }
 
         // Birthday
+
+        if (user.getBirthday() == null) {
+            throw new BadRequestException(String.format(
+                    requiredMessage,
+                    "birthday"
+            ));
+        }
 
         Instant maxBirthday;
 
