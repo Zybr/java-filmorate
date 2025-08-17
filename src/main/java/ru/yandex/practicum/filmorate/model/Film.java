@@ -14,10 +14,8 @@ import java.util.Date;
 @Builder(toBuilder = true)
 public class Film extends AbstractModel {
     protected Long id;
-    @NotNull
     @NotBlank
     private String name;
-    @NotNull
     @NotBlank
     @Size(max = 200)
     private String description;

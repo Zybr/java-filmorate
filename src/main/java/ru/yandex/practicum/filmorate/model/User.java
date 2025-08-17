@@ -14,11 +14,9 @@ import java.util.Date;
 @Builder(toBuilder = true)
 public class User extends AbstractModel {
     protected Long id;
-    @NotNull
     @NotBlank
     @Email
     private String email;
-    @NotNull
     @NotBlank
     @Pattern(regexp = "^\\w+$")
     private String login;

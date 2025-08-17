@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,7 +25,7 @@ public abstract class AbstractModelsController<T extends AbstractModel> {
     }
 
     @PostMapping
-    public T create(@RequestBody @Validated T creation) {
+    public T create(@RequestBody @Valid T creation) {
         validate(creation);
         fill(creation);
         save(creation);
@@ -34,7 +34,7 @@ public abstract class AbstractModelsController<T extends AbstractModel> {
     }
 
     @PutMapping
-    public T update(@RequestBody @Validated T updating) {
+    public T update(@RequestBody @Valid T updating) {
         checkExistence(updating);
         validate(updating);
         fill(updating);
@@ -43,7 +43,7 @@ public abstract class AbstractModelsController<T extends AbstractModel> {
         return updating;
     }
 
-    private void checkExistence(T model) throws NotFoundException {
+    private void checkExistence(T model) {
         if (!models.containsKey(model.getId())) {
             throw new NotFoundException(String.format("There is no a model with %d ID", model.getId()));
         }
@@ -57,7 +57,7 @@ public abstract class AbstractModelsController<T extends AbstractModel> {
         );
     }
 
-    protected void throwValidationError(String errorMessage) throws BadRequestException {
+    protected void throwValidationError(String errorMessage) {
         String validationErrorMessage = "Validation failed: " + errorMessage;
         getLogger().warn(validationErrorMessage);
         throw new BadRequestException(validationErrorMessage);
