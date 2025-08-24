@@ -12,19 +12,18 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Builder(toBuilder = true)
-public class Film extends AbstractModel {
+public class User extends AbstractModel {
     protected Long id;
     @NotBlank
-    private String name;
+    @Email
+    private String email;
     @NotBlank
-    @Size(max = 200)
-    private String description;
+    @Pattern(regexp = "^\\w+$")
+    private String login;
+    private String name;
     @NotNull
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Past
-    private Date releaseDate;
-    @NotNull
-    @Positive
-    private Integer duration;
+    private Date birthday;
 }
