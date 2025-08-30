@@ -8,11 +8,13 @@ import lombok.EqualsAndHashCode;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Builder(toBuilder = true)
-public class Film extends AbstractModel {
+public class Film extends Model {
     protected Long id;
     @NotBlank
     private String name;
@@ -27,4 +29,7 @@ public class Film extends AbstractModel {
     @NotNull
     @Positive
     private Integer duration;
+
+    @EqualsAndHashCode.Exclude
+    private final Set<Long> likes = new HashSet<>();
 }
