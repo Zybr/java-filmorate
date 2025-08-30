@@ -4,6 +4,6 @@ package ru.yandex.practicum.filmorate.model;
 import lombok.Data;
 
 @Data
-public class AbstractModel {
+public class Model {
     protected Long id;
 }
