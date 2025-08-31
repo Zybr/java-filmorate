@@ -65,12 +65,12 @@ public class FilmController extends ModelController<Film> {
 
     @GetMapping("/popular")
     public List<Film> getPopular(
-            @RequestParam(required = false, defaultValue = "10") int count
+            @RequestParam(defaultValue = "10") int count
     ) {
         return filmService.getTopFilms(count);
     }
 
-    protected void validate(Film model) throws RuntimeException {
+    protected void validate(Film model) {
         Date minReleaseDate = Date.from(
                 LocalDate.of(1895, 12, 28)
                         .atStartOfDay()
