@@ -8,11 +8,13 @@ import lombok.EqualsAndHashCode;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Builder(toBuilder = true)
-public class User extends AbstractModel {
+public class User extends Model {
     protected Long id;
     @NotBlank
     @Email
@@ -26,4 +28,7 @@ public class User extends AbstractModel {
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Past
     private Date birthday;
+
+    @EqualsAndHashCode.Exclude
+    private final Set<Long> friends = new HashSet<>();
 }
