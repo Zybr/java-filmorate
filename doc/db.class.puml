@@ -1,0 +1,114 @@
+@startuml
+
+legend
+    - **PK** - Primary Key
+    - **U** - Unique
+endlegend
+
+entity genres {
+    * id: integer
+    --
+    * name: varchar(50)
+}
+note left of genres::id
+    PK
+endnote
+note left of genres::name
+    U
+endnote
+
+entity mpas {
+    * id: integer
+    --
+    * name: varchar(50)
+}
+note left of mpas::id
+    PK
+endnote
+note left of mpas::name
+    U
+endnote
+
+entity films {
+    * id: integer
+    --
+    * name: varchar(50)
+    * description: varchar(200)
+    * release_date: date
+    * duration: integer
+}
+note left of films::id
+    PK
+endnote
+note left of films::name
+    U
+endnote
+
+entity users {
+    * id: integer
+    --
+    * email: varchar(50)
+    * login: varchar(50)
+    * name: varchar(50)
+    * birthday: date
+}
+note left of users::id
+    PK
+endnote
+note left of users::email
+    U
+endnote
+note left of users::login
+    U
+endnote
+
+entity likes {
+    * user_id: integer
+    * film_id: integer
+    --
+}
+note "PK" as likes_pk
+likes_pk . likes:user_id
+likes_pk . likes:film_id
+films ||--|{ likes: film_id
+users ||--|{ likes: user_id
+
+entity film_genres {
+    * film_id: integer
+    * genre_id: integer
+    --
+}
+note "PK" as film_genres_pk
+film_genres_pk . film_genres:film_id
+film_genres_pk . film_genres:genre_id
+films ||--|{ film_genres: film_id
+genres ||-up-|{ film_genres: genre_id
+
+entity film_mpas {
+    * film_id: integer
+    * mpa_id: integer
+    --
+}
+note "PK" as film_mpas_pk
+film_mpas_pk . film_mpas:film_id
+film_mpas_pk . film_mpas:mpa_id
+note left of film_mpas::film_id
+    U
+endnote
+
+films ||-down-|| film_mpas: film_id
+mpas ||-up-|{ film_mpas: mpa_id
+
+entity friendships {
+    * user_id: integer
+    * friend_id: integer
+    --
+    * is_confirmed: bool = false
+}
+note "PK" as friendships_pk
+friendships_pk . friendships:user_id
+friendships_pk . friendships:friend_id
+users ||--{ friendships: user_id
+users ||--{ friendships: friend_id
+
+@enduml
