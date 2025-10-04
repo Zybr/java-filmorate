@@ -35,9 +35,7 @@ public class UserControllerTest extends ModelControllerTest<User> {
     @Test
     public void shouldGetUserById() throws Exception {
         User existedUser = createModel();
-
         User fetchedUser = doGetOneRequest(existedUser.getId());
-
         this.assertEqualModels(existedUser, fetchedUser);
     }
 
@@ -55,7 +53,7 @@ public class UserControllerTest extends ModelControllerTest<User> {
         );
 
         Assertions.assertTrue(
-                userService.areFriends(
+                userService.isFriend(
                         refreshUser(userA),
                         refreshUser(userB)
                 )
@@ -74,9 +72,8 @@ public class UserControllerTest extends ModelControllerTest<User> {
                 userA.getId(),
                 userB.getId()
         );
-
         Assertions.assertTrue(
-                userService.areFriends(
+                userService.isFriend(
                         refreshUser(userA),
                         refreshUser(userB)
                 )
@@ -86,9 +83,8 @@ public class UserControllerTest extends ModelControllerTest<User> {
                 userA.getId(),
                 userB.getId()
         );
-
         Assertions.assertFalse(
-                userService.areFriends(
+                userService.isFriend(
                         refreshUser(userA),
                         refreshUser(userB)
                 )

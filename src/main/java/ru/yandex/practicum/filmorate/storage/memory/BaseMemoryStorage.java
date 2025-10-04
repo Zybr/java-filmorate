@@ -1,14 +1,15 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.memory;
 
 import org.slf4j.Logger;
 import ru.yandex.practicum.filmorate.exception.storage.NotExistedModelException;
 import ru.yandex.practicum.filmorate.model.Model;
+import ru.yandex.practicum.filmorate.storage.Storage;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class BaseStorage<M extends Model> implements Storage<M> {
+public abstract class BaseMemoryStorage<M extends Model> implements Storage<M> {
     protected final Map<Long, M> models = new HashMap<>();
     protected Long lastId = 0L;
 
@@ -22,7 +23,7 @@ public abstract class BaseStorage<M extends Model> implements Storage<M> {
         if (model == null) {
             throw new NotExistedModelException(
                     String.format(
-                            "There Model(%d)",
+                            "There is no Model(%d)",
                             id
                     )
             );
@@ -36,6 +37,11 @@ public abstract class BaseStorage<M extends Model> implements Storage<M> {
                 .values()
                 .stream()
                 .toList();
+    }
+
+    @Override
+    public int getSize() {
+        return this.models.size();
     }
 
     public M create(M creation) {
@@ -85,15 +91,10 @@ public abstract class BaseStorage<M extends Model> implements Storage<M> {
                 .getSimpleName();
 
         getLogger().info(
-                "{}({}) was {}.",
+                "{}(ID:{}) was {}.",
                 modelName,
                 model.getId(),
                 isNew ? "created" : "updated"
-        );
-        getLogger().info(
-                "There are {} {} models.",
-                models.size(),
-                modelName
         );
     }
 

@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FriendshipStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.HashSet;
@@ -13,40 +14,33 @@ import java.util.Set;
 @Slf4j
 public class UserService {
     private final UserStorage userStorage;
+    private final FriendshipStorage friendshipStorage;
 
-    public UserService(UserStorage userStorage) {
+    public UserService(
+            UserStorage userStorage,
+            FriendshipStorage friendshipStorage
+    ) {
         this.userStorage = userStorage;
+        this.friendshipStorage = friendshipStorage;
     }
 
-    public void joinFriends(
-            User userA,
-            User userB
+    public void addFriend(
+            User user,
+            User friend
     ) {
-        checkFriendshipRelation(userA, userB);
-        userA.getFriends()
-                .add(userB.getId());
-        userB.getFriends()
-                .add(userA.getId());
-        log.info(
-                "User({}) and User({}) where connected.",
-                userA.getId(),
-                userB.getId()
+        friendshipStorage.addFriend(
+                user,
+                friend
         );
     }
 
-    public void splitFriends(
-            User userA,
-            User userB
+    public void removeFriend(
+            User user,
+            User friend
     ) {
-        checkFriendshipRelation(userA, userB);
-        userA.getFriends()
-                .remove(userB.getId());
-        userB.getFriends()
-                .remove(userA.getId());
-        log.info(
-                "User({}) and User({}) where disconnected.",
-                userA.getId(),
-                userB.getId()
+        friendshipStorage.removeFriend(
+                user,
+                friend
         );
     }
 
@@ -59,19 +53,19 @@ public class UserService {
                 .toList();
     }
 
-    public boolean areFriends(
-            User userA,
-            User userB
+    public boolean isFriend(
+            User user,
+            User friend
     ) {
-        return userA.getFriends()
-                .contains(userB.getId());
+        return friendshipStorage
+                .isFriend(user, friend);
     }
 
     public List<User> getCommonFriends(
             User userA,
             User userB
     ) {
-        checkFriendshipRelation(userA, userB);
+        friendshipStorage.assertJoinable(userA, userB);
         Set<Long> intersection = new HashSet<>(userA.getFriends());
         intersection.retainAll(userB.getFriends());
 
@@ -79,14 +73,5 @@ public class UserService {
                 .stream()
                 .map(userStorage::findOne)
                 .toList();
-    }
-
-    private void checkFriendshipRelation(
-            User userA,
-            User userB
-    ) {
-        if (userA.equals(userB)) {
-            throw new IllegalArgumentException("Friends can't be the same User");
-        }
     }
 }

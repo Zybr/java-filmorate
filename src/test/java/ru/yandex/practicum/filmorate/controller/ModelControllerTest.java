@@ -1,21 +1,24 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import ru.yandex.practicum.filmorate.factory.Factory;
 import ru.yandex.practicum.filmorate.model.Model;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -23,6 +26,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public abstract class ModelControllerTest<M extends Model> {
+    @Autowired
+    private ObjectMapper objectMapper;
+
     protected final Faker faker = new Faker();
     @Autowired
     protected MockMvc mvc;
@@ -33,6 +39,16 @@ public abstract class ModelControllerTest<M extends Model> {
     @Test
     public void shouldGetAll() throws Exception {
         mvc.perform(get(getRootPath()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void shouldGetOne() throws Exception {
+        M model = createModel();
+
+        mvc.perform(get(
+                        getRootPath() + "/" + model.getId()
+                ))
                 .andExpect(status().isOk());
     }
 
@@ -143,6 +159,30 @@ public abstract class ModelControllerTest<M extends Model> {
         }
     }
 
+    protected Map<String, Object> makeRequest(
+            MockHttpServletRequestBuilder request
+    ) throws Exception {
+        return makeRequest(
+                request,
+                status().isOk()
+        );
+    }
+
+    protected Map<String, Object> makeRequest(
+            MockHttpServletRequestBuilder request,
+            ResultMatcher statusCode
+    ) throws Exception {
+        MockHttpServletResponse response = mvc.perform(request)
+                .andDo(print())
+                .andExpect(statusCode)
+                .andReturn()
+                .getResponse();
+        response.setCharacterEncoding("utf-8");
+        return fromJson(
+                response.getContentAsString()
+        );
+    }
+
     protected M createModel() throws Exception {
         return jsonToModel(
                 mvc.perform(
@@ -161,13 +201,13 @@ public abstract class ModelControllerTest<M extends Model> {
 
     protected M jsonToModel(String json) throws JsonProcessingException, ParseException {
         return (M) attributesToModel(
-                new ObjectMapper()
+                objectMapper
                         .readValue(json, LinkedHashMap.class)
         );
     }
 
     protected List<M> jsonToModels(String json) throws JsonProcessingException {
-        return new ObjectMapper()
+        return objectMapper
                 .readValue(json, ArrayList.class)
                 .stream()
                 .map((attributes) -> {
@@ -194,13 +234,23 @@ public abstract class ModelControllerTest<M extends Model> {
     protected abstract ArrayList<M> makeInvalidModels() throws ParseException;
 
     protected String toJson(Object data) throws JsonProcessingException {
-        return new ObjectMapper()
+        return objectMapper
                 .writeValueAsString(data);
     }
 
-    protected Date parseDate(String dateStr) throws ParseException {
-        return Date.from(
-                new SimpleDateFormat("yyyy-MM-dd").parse(dateStr).toInstant()
+    protected Map<String, Object> fromJson(String json) throws JsonProcessingException {
+        return objectMapper
+                .readValue(
+                        json,
+                        new TypeReference<HashMap<String, Object>>() {
+                        }
+                );
+    }
+
+    protected LocalDate parseDate(String dateStr) throws ParseException {
+        return LocalDate.parse(
+                dateStr,
+                DateTimeFormatter.ISO_LOCAL_DATE
         );
     }
 
@@ -208,6 +258,47 @@ public abstract class ModelControllerTest<M extends Model> {
         assertEquals(
                 toJson(expectedModel),
                 toJson(actualModel)
+        );
+    }
+
+    protected void assertSavedData(
+            Map<String, Object> expectedData,
+            Map<String, Object> savedData
+    ) {
+        this.assertSavedData(
+                expectedData,
+                savedData,
+                List.of()
+        );
+    }
+
+    protected void assertSavedData(
+            Map<String, Object> expectedData,
+            Map<String, Object> savedData,
+            List<String> excludedKeys
+    ) {
+        expectedData = new HashMap<>(expectedData);
+        savedData = new HashMap<>(savedData);
+
+        Set<String> comparingKeys = expectedData.keySet();
+        excludedKeys.forEach(comparingKeys::remove);
+
+        if (
+                expectedData.containsKey("id")
+                        && expectedData.get("id") == null
+        ) {
+            comparingKeys.remove("id");
+        }
+
+        for (String key : savedData.keySet().stream().toList()) {
+            if (!comparingKeys.contains(key)) {
+                savedData.remove(key);
+            }
+        }
+
+        Assertions.assertEquals(
+                expectedData,
+                savedData
         );
     }
 }

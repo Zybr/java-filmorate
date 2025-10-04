@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
@@ -17,12 +16,12 @@ import java.util.List;
 @RequestMapping("/users")
 @Slf4j
 public class UserController extends ModelController<User> {
-    private final InMemoryUserStorage userStorage;
+    private final UserStorage userStorage;
     private final UserService userService;
 
     @Autowired
     public UserController(
-            InMemoryUserStorage userStorage,
+            UserStorage userStorage,
             UserService userService
     ) {
         this.userStorage = userStorage;
@@ -41,7 +40,7 @@ public class UserController extends ModelController<User> {
             @PathVariable Long id,
             @PathVariable Long friendId
     ) {
-        this.userService.joinFriends(
+        this.userService.addFriend(
                 userStorage.findOrFail(id),
                 userStorage.findOrFail(friendId)
         );
@@ -54,7 +53,7 @@ public class UserController extends ModelController<User> {
             @PathVariable Long id,
             @PathVariable Long friendId
     ) {
-        this.userService.splitFriends(
+        this.userService.removeFriend(
                 userStorage.findOrFail(id),
                 userStorage.findOrFail(friendId)
         );

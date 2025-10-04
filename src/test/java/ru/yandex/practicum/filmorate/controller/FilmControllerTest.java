@@ -1,24 +1,24 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import ru.yandex.practicum.filmorate.dal.mapper.FilmRowMapper;
+import ru.yandex.practicum.filmorate.dto.request.FilmSavingDto;
 import ru.yandex.practicum.filmorate.factory.FilmFactory;
 import ru.yandex.practicum.filmorate.factory.UserFactory;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.*;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -28,24 +28,94 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class FilmControllerTest extends ModelControllerTest<Film> {
     @Autowired
     private FilmStorage filmStorage;
+    @Autowired
+    private MpaStorage mpaStorage;
+    @Autowired
+    private CategoryStorage categoryStorage;
+    @Autowired
+    private GenreStorage genreStorage;
+    @Autowired
+    private UserStorage userStorage;
+
+    @Autowired
+    private FilmRowMapper filmRowMapper;
 
     @Autowired
     private FilmService filmService;
 
     private final FilmFactory filmFactory = new FilmFactory();
-
-    @Autowired
-    private UserStorage userStorage;
-
     private final UserFactory userFactory = new UserFactory();
+
+    @BeforeEach
+    public void initFactories() {
+        userFactory.setStorage(userStorage);
+        filmFactory
+                .setStorage(filmStorage)
+                .setMpaStorage(mpaStorage)
+                .setCategoryStorage(categoryStorage)
+                .setGenreStorage(genreStorage);
+    }
+
+    @Test
+    public void shouldGetOne() throws Exception {
+        FilmSavingDto filmData = getModelFactory().makeSavingDto();
+
+        assertSavedFilm(
+                fromJson(toJson(filmData)),
+                makeRequest(
+                        get(String.format(
+                                getRootPath() + "/%d",
+                                filmStorage.create(
+                                        filmRowMapper.mapWithSaving(filmData)
+                                ).getId()
+                        ))
+                )
+        );
+    }
+
+    /**
+     * @see FilmController#create(FilmSavingDto)
+     */
+    @Test
+    public void shouldCreate() throws Exception {
+        FilmSavingDto requestDto = getModelFactory().makeSavingDto();
+
+        assertSavedFilm(
+                fromJson(toJson(requestDto)),
+                makeRequest(
+                        post(getRootPath())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(toJson(requestDto))
+                )
+        );
+    }
+
+    /**
+     * @see FilmController#update(FilmSavingDto)
+     */
+    @Test
+    public void shouldUpdate() throws Exception {
+        Film model = createModel();
+        FilmSavingDto requestDto = getModelFactory().makeSavingDto();
+        requestDto.setId(model.getId());
+
+        assertSavedFilm(
+                fromJson(toJson(requestDto)),
+                makeRequest(
+                        put(getRootPath())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(toJson(requestDto))
+                )
+        );
+    }
 
     /**
      * @see FilmController#addLike(Long, Long)
      */
     @Test
     public void shouldAddLike() throws Exception {
-        Film film = createFilm();
-        User user = createUser();
+        Film film = filmFactory.create();
+        User user = userFactory.create();
 
         doAddLikeRequest(
                 film.getId(),
@@ -64,8 +134,8 @@ public class FilmControllerTest extends ModelControllerTest<Film> {
      */
     @Test
     public void shouldRemoveLike() throws Exception {
-        Film film = createFilm();
-        User user = createUser();
+        Film film = filmFactory.create();
+        User user = userFactory.create();
         filmService.addLike(film, user);
 
         doRemoveLikeRequest(
@@ -85,10 +155,8 @@ public class FilmControllerTest extends ModelControllerTest<Film> {
      */
     @Test
     public void shouldGetPopular() throws Exception {
-        for (int i = 0; i < 12; i++) {
-            userStorage.create(userFactory.make());
-            filmStorage.create(filmFactory.make());
-        }
+        userFactory.createList(12);
+        filmFactory.createList(12);
 
         for (int i = 0; i < 50; i++) {
             filmService.addLike(
@@ -132,7 +200,7 @@ public class FilmControllerTest extends ModelControllerTest<Film> {
 
     @Override
     protected FilmFactory getModelFactory() {
-        return new FilmFactory();
+        return this.filmFactory;
     }
 
     @Override
@@ -199,21 +267,9 @@ public class FilmControllerTest extends ModelControllerTest<Film> {
         return models;
     }
 
-    private Film createFilm() {
-        return filmStorage.create(
-                this.filmFactory.make()
-        );
-    }
-
     private Film refreshFilm(Film film) {
         return this.filmStorage.findOne(
                 film.getId()
-        );
-    }
-
-    private User createUser() {
-        return userStorage.create(
-                this.userFactory.make()
         );
     }
 
@@ -342,6 +398,23 @@ public class FilmControllerTest extends ModelControllerTest<Film> {
                         .sorted()
                         .toList()
                         .reversed()
+        );
+    }
+
+    protected void assertSavedFilm(
+            Map<String, Object> expectedData,
+            Map<String, Object> savedData
+    ) {
+        ((HashMap<String, Object>) savedData.getOrDefault("mpa", new HashMap<>()))
+                .remove("name");
+        ((ArrayList<HashMap<String, Object>>) savedData.getOrDefault("genres", new ArrayList<>()))
+                .forEach(
+                        (genre) -> genre.remove("name")
+                );
+        assertSavedData(
+                expectedData,
+                savedData,
+                List.of("releaseDate")
         );
     }
 }

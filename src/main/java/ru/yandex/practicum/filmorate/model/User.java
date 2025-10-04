@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -16,18 +16,22 @@ import java.util.Set;
 @Builder(toBuilder = true)
 public class User extends Model {
     protected Long id;
+
     @NotBlank
     @Email
     private String email;
+
     @NotBlank
     @Pattern(regexp = "^\\w+$")
     private String login;
+
     private String name;
+
     @NotNull
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Past
-    private Date birthday;
+    private LocalDate birthday;
 
     @EqualsAndHashCode.Exclude
     private final Set<Long> friends = new HashSet<>();
