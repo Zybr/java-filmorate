@@ -1,0 +1,36 @@
+services:
+  fr-db:
+    image: postgres:16.1
+    container_name: fr-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./volumes/fr-db:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=filmorate
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=12345
+    healthcheck:
+      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
+      timeout: 5s
+      interval: 5s
+      retries: 10
+
+  fr-db-init:
+    image: postgres:16.1
+    container_name: fr-db-init
+    depends_on:
+      fr-db:
+        condition: service_healthy
+    volumes:
+      - ./src/main/resources/schema.sql:/sql/schema.sql
+      - ./src/main/resources/data.sql:/sql/data.sql
+      - ./src/main/resources/info.sql:/sql/info.sql
+    entrypoint:
+      - bash
+      - -c
+      - |
+        set -e
+        psql postgresql://user:12345@fr-db:5432/filmorate -v ON_ERROR_STOP=1 -f /sql/schema.sql
+        psql postgresql://user:12345@fr-db:5432/filmorate -v ON_ERROR_STOP=1 -f /sql/data.sql
+        psql postgresql://user:12345@fr-db:5432/filmorate -v ON_ERROR_STOP=1 -f /sql/info.sql

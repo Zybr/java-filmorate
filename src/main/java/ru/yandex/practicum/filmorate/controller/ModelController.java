@@ -19,13 +19,17 @@ public abstract class ModelController<M extends Model> {
     }
 
     @PostMapping
-    public M create(@RequestBody @Valid M creation) {
+    public M create(
+            @RequestBody @Valid M creation
+    ) {
         validate(creation);
         return getStorage().create(creation);
     }
 
     @PutMapping
-    public M update(@RequestBody @Valid M updating) {
+    public M update(
+            @RequestBody @Valid M updating
+    ) {
         validate(updating);
         return getStorage().update(updating);
     }
@@ -36,7 +40,9 @@ public abstract class ModelController<M extends Model> {
         throw new BadRequestException(validationErrorMessage);
     }
 
-    protected void validate(M model) throws RuntimeException {
+    protected void validate(
+            M model
+    ) throws RuntimeException {
         // Override for adding extra validation
     }
 

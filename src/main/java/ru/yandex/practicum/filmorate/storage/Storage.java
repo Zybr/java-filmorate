@@ -11,6 +11,8 @@ public interface Storage<M extends Model> {
 
     List<M> findAll();
 
+    int getSize();
+
     M create(M creation);
 
     M update(M updating);

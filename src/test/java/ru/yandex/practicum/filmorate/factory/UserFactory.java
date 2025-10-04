@@ -1,23 +1,28 @@
 package ru.yandex.practicum.filmorate.factory;
 
 
-import com.github.javafaker.Faker;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.Storage;
 
-import java.time.Instant;
-import java.util.Date;
+import java.time.LocalDate;
 
 
 public class UserFactory extends Factory<User> {
-    private final Faker faker = new Faker();
+    @Getter
+    @Setter
+    @Accessors(chain = true)
+    private Storage<User> storage;
 
     public User make() {
         return User
                 .builder()
-                .email(faker.internet().emailAddress())
-                .login(faker.lorem().word())
-                .name(faker.company().name())
-                .birthday(Date.from(Instant.now()))
+                .email(createUniqueWord() + faker.internet().emailAddress())
+                .login(createUniqueWord())
+                .name(createUniqueWord())
+                .birthday(LocalDate.now().minusYears(5))
                 .build();
     }
 }
