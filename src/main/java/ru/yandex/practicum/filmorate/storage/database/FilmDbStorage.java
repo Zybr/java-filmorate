@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
+import java.sql.SQLException;
 import java.util.*;
 
 @Slf4j
@@ -242,16 +243,23 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     }
 
     private void saveGenres(Film film) {
-        categoryRepository
-                .deleteByFilmId(film.getId());
-        film.getGenreIds()
-                .forEach(
-                        (Long genreId) -> categoryRepository.insert(
-                                Category.builder()
-                                        .filmId(film.getId())
-                                        .genreId(genreId)
-                                        .build()
-                        )
-                );
+        try {
+            categoryRepository
+                    .deleteByFilmId(film.getId());
+            categoryRepository
+                    .insertMany(
+                            film.getGenreIds()
+                                    .stream()
+                                    .map(
+                                            (Long genreId) -> Category.builder()
+                                                    .filmId(film.getId())
+                                                    .genreId(genreId)
+                                                    .build()
+                                    )
+                                    .toList()
+                    );
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -42,7 +42,7 @@ public class FilmRowMapper extends BaseModelMapper<Film> {
         return super
                 .getStoringFields()
                 .stream()
-                .filter(field -> !excluded.contains(field))
+                .filter(field -> !excluded.contains(field.toString()))
                 .toList();
     }
 

@@ -35,14 +35,20 @@ public abstract class BaseModelMapper<M extends Model> implements RowMapper<M>, 
         return sqlData;
     }
 
-    public List<String> getChangeableValues(M model) {
-        Map<String, Object> data = mapModel(model);
+    public List<Object> getChangeableValues(M model) {
+        Map<String, Object> mapped = mapModel(model);
+        List<String> fields = getChangeableFields();
 
-        return getChangeableFields()
-                .stream()
-                .map(data::get)
-                .map(this::getSqlValue)
-                .collect(Collectors.toList());
+        List<Object> values = new ArrayList<>();
+        for (Object field : fields) {
+            Object value = mapped.get(field.toString());
+            if (value instanceof Map<?, ?> nested && nested.containsKey("id")) {
+                value = nested.get("id");
+            }
+            values.add(value);
+        }
+
+        return values;
     }
 
     public String getSqlValue(Object value) {
@@ -54,10 +60,21 @@ public abstract class BaseModelMapper<M extends Model> implements RowMapper<M>, 
                 : String.valueOf(value);
     }
 
-    public String getSqlValues(List<String> values) {
+    public String getSqlValues(List<Object> values) {
         return String.join(
                 ", ",
-                values
+                values.stream()
+                        .map(this::getSqlValue)
+                        .toList()
+        );
+    }
+
+    public String getSqlKeys(List<String> values) {
+        return String.join(
+                ", ",
+                values.stream()
+                        .map(Object::toString)
+                        .toList()
         );
     }
 
@@ -79,7 +96,7 @@ public abstract class BaseModelMapper<M extends Model> implements RowMapper<M>, 
     }
 
     public List<String> getChangeableFields() {
-        Set<String> changeableFields = new HashSet<>(getStoringFields());
+        Set<Object> changeableFields = new HashSet<>(getStoringFields());
         changeableFields.remove("id");
 
         return getStoringFields()
@@ -91,7 +108,7 @@ public abstract class BaseModelMapper<M extends Model> implements RowMapper<M>, 
     public String getSqlUpdatingSet(M model) {
         List<String> changeable = getChangeableFields();
 
-        return getSqlValues(
+        return getSqlKeys(
                 mapModel(model)
                         .entrySet()
                         .stream()
@@ -117,7 +134,7 @@ public abstract class BaseModelMapper<M extends Model> implements RowMapper<M>, 
             String columnName
     ) throws SQLException {
         long value = resultSet.getLong(columnName);
-        return  value != 0L
+        return value != 0L
                 ? value
                 : null;
     }

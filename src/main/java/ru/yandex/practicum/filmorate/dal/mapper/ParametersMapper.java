@@ -10,11 +10,13 @@ public interface ParametersMapper<M extends Model> {
 
     List<String> getChangeableFields();
 
-    List<String> getChangeableValues(M model);
+    List<Object> getChangeableValues(M model);
 
     List<String> getStoringFields();
 
     String getSqlValue(Object value);
 
-    String getSqlValues(List<String> values);
+    String getSqlValues(List<Object> values);
+
+    String getSqlKeys(List<String> values);
 }

@@ -15,7 +15,6 @@ import java.util.*;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-// TODO Fill "name" by "login"
 public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     private final UserRepository repository;
     private final FriendshipRepository friendshipRepository;

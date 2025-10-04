@@ -42,7 +42,7 @@ public abstract class BaseDbStorage<M extends Model> implements Storage<M> {
     public M create(M creation) {
         fill(creation);
         M model = this.getRepository()
-                .insert(creation);
+                .insertOne(creation);
 
         String modelName = model
                 .getClass()

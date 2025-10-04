@@ -4,8 +4,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.dal.mapper.BaseModelMapper;
 import ru.yandex.practicum.filmorate.model.Model;
 
+import java.sql.BatchUpdateException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public abstract class BaseModelRepository<M extends Model> extends BaseRepository<M> {
     private static final String FIND_ALL_QUERY = "SELECT %s FROM {{table}}";
@@ -46,7 +51,7 @@ public abstract class BaseModelRepository<M extends Model> extends BaseRepositor
                         mapper.getSqlWithValues(
                                 FIND_ALL_QUERY,
                                 List.of(
-                                        mapper.getSqlValues(
+                                        mapper.getSqlKeys(
                                                 mapper.getStoringFields()
                                         )
                                 )
@@ -61,13 +66,13 @@ public abstract class BaseModelRepository<M extends Model> extends BaseRepositor
         );
     }
 
-    public M insert(M model) {
+    public M insertOne(M model) {
         model.setId(
                 insertOne(
                         mapper.getSqlWithValues(
                                 getSql(INSERT_ONE_QUERY),
                                 List.of(
-                                        mapper.getSqlValues(mapper.getChangeableFields()),
+                                        mapper.getSqlKeys(mapper.getChangeableFields()),
                                         mapper.getSqlValues(mapper.getChangeableValues(model))
                                 )
                         )
@@ -75,6 +80,51 @@ public abstract class BaseModelRepository<M extends Model> extends BaseRepositor
         );
 
         return model;
+    }
+
+    public void insertMany(List<M> models) throws SQLException {
+        if (models.isEmpty()) {
+            return;
+        }
+
+        List<String> fields = mapper
+                .getChangeableFields()
+                .stream()
+                .map(Object::toString)
+                .toList();
+
+        String insertSql = String.format(
+                getSql(INSERT_ONE_QUERY),
+                String.join(", ", fields),
+                fields.stream().map(f -> "?")
+                        .collect(Collectors.joining(", "))
+        );
+
+        try (
+                Connection connection = getConnection();
+                PreparedStatement statement = connection.prepareStatement(insertSql)
+        ) {
+            connection.setAutoCommit(false);
+
+            for (M model : models) {
+                List<Object> values = mapper.getChangeableValues(model);
+
+                for (int i = 0; i < values.size(); i++) {
+                    statement.setObject(i + 1, values.get(i));
+                }
+
+                statement.addBatch();
+            }
+
+            try {
+                statement.executeBatch();
+                connection.commit();
+            } catch (BatchUpdateException batchUpdateException) {
+                connection.rollback();
+                throw batchUpdateException;
+            }
+
+        }
     }
 
     public M update(M model) {

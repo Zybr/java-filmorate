@@ -28,7 +28,7 @@ public class CategoryDbStorage implements CategoryStorage {
             return;
         }
 
-        categoryRepository.insert(
+        categoryRepository.insertOne(
                 Category.builder()
                         .filmId(film.getId())
                         .genreId(genre.getId())

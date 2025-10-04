@@ -20,7 +20,7 @@ public class LikeDbStorage extends LikeMemoryStorage implements LikeStorage {
             return;
         }
 
-        likeRepository.insert(
+        likeRepository.insertOne(
                 Like.builder()
                         .filmId(film.getId())
                         .userId(user.getId())

@@ -117,14 +117,7 @@ public abstract class BaseRepository<T extends Model> {
         change(sql, params);
     }
 
-    private int change(
-            String sql,
-            Object... params
-    ) {
-        return jdbc.update(sql, params);
-    }
-
-    private Connection getConnection() throws SQLException {
+    protected Connection getConnection() throws SQLException {
         DataSource dataSource = jdbc.getDataSource();
 
         if (dataSource == null) {
@@ -132,5 +125,12 @@ public abstract class BaseRepository<T extends Model> {
         }
 
         return dataSource.getConnection();
+    }
+
+    private int change(
+            String sql,
+            Object... params
+    ) {
+        return jdbc.update(sql, params);
     }
 }

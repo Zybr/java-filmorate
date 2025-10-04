@@ -22,5 +22,4 @@ public class FilmRepository extends BaseModelRepository<Film> {
     protected String getTableName() {
         return "films";
     }
-
 }

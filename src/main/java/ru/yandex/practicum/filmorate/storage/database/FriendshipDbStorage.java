@@ -23,7 +23,7 @@ public class FriendshipDbStorage extends FriendshipMemoryStorage {
             return;
         }
 
-        friendshipRepository.insert(
+        friendshipRepository.insertOne(
                 Friendship.builder()
                         .userId(user.getId())
                         .friendId(friend.getId())
